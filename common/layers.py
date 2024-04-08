@@ -2,6 +2,8 @@
 from common.np import *  # import numpy as np
 from common.config import GPU
 from common.functions import softmax, cross_entropy_error
+if GPU:
+    import cupyx
 
 
 class MatMul:
@@ -148,23 +150,46 @@ class Dropout:
         return dout * self.mask
 
 
-class Embedding:
-    def __init__(self, W):
-        self.params = [W]
-        self.grads = [np.zeros_like(W)]
+class Embedding_W_in:
+    def __init__(self, W_in):
+        self.params_W_in = [W_in]
+        self.grads_W_in = [np.zeros_like(W_in)]
         self.idx = None
 
     def forward(self, idx):
-        W, = self.params
+        W_in, = self.params_W_in
         self.idx = idx
-        out = W[idx]
+        out = W_in[idx]
         return out
 
     def backward(self, dout):
-        dW, = self.grads
+        dW, = self.grads_W_in
         dW[...] = 0
         if GPU:
-            np.scatter_add(dW, self.idx, dout)
+            # np.scatter_add(dW, self.idx, dout)
+            cupyx.scatter_add(dW, self.idx, dout)
+        else:
+            np.add.at(dW, self.idx, dout)
+        return None
+
+class Embedding_W_out:
+    def __init__(self, W_out):
+        self.params_W_out = [W_out]
+        self.grads_W_out = [np.zeros_like(W_out)]
+        self.idx = None
+
+    def forward(self, idx):
+        W_out, = self.params_W_out
+        self.idx = idx
+        out = W_out[idx]
+        return out
+
+    def backward(self, dout):
+        dW, = self.grads_W_out
+        dW[...] = 0
+        if GPU:
+            # np.scatter_add(dW, self.idx, dout)
+            cupyx.scatter_add(dW, self.idx, dout)
         else:
             np.add.at(dW, self.idx, dout)
         return None

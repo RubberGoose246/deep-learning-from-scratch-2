@@ -38,10 +38,10 @@ class Trainer:
                 # 勾配を求め、パラメータを更新
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
-                params, grads = remove_duplicate(model.params, model.grads)  # 共有された重みを1つに集約
+                params_W_both, grads_W_both = remove_duplicate(model.params_W_both, model.grads_W_both)  # 共有された重みを1つに集約
                 if max_grad is not None:
-                    clip_grads(grads, max_grad)
-                optimizer.update(params, grads)
+                    clip_grads(grads_W_both, max_grad)
+                optimizer.update(params_W_both, grads_W_both)
                 total_loss += loss
                 loss_count += 1
 

@@ -2,7 +2,7 @@
 import sys
 sys.path.append('..')
 from common.np import *  # import numpy as np
-from common.layers import Embedding
+from common.layers import Embedding_W_in
 from ch04.negative_sampling_layer import NegativeSamplingLoss
 
 
@@ -17,16 +17,19 @@ class CBOW:
         # レイヤの生成
         self.in_layers = []
         for i in range(2 * window_size):
-            layer = Embedding(W_in)  # Embeddingレイヤを使用
+            layer = Embedding_W_in(W_in)  # Embedding_W_inレイヤを使用
             self.in_layers.append(layer)
         self.ns_loss = NegativeSamplingLoss(W_out, corpus, power=0.75, sample_size=5)
 
         # すべての重みと勾配をリストにまとめる
         layers = self.in_layers + [self.ns_loss]
-        self.params, self.grads = [], []
-        for layer in layers:
-            self.params += layer.params
-            self.grads += layer.grads
+        self.params_W_both, self.grads_W_both = [], []
+        for in_layer in self.in_layers:
+            self.params_W_both += layer.params_W_in
+            self.grads_W_both += layer.grads_W_in
+
+        self.params_W_both += self.ns_loss.params_W_out
+        self.grads_W_both += self.ns_loss.grads_W_out
 
         # メンバ変数に単語の分散表現を設定
         self.word_vecs = W_in
