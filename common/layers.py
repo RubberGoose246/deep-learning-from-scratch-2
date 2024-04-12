@@ -2,7 +2,7 @@
 from common.np import *  # import numpy as np
 from common.config import GPU
 from common.functions import softmax, cross_entropy_error
-
+import sys
 
 class MatMul:
     def __init__(self, W):
@@ -150,21 +150,52 @@ class Dropout:
 
 class Embedding:
     def __init__(self, W):
+        print('=== Embedding.__init__ BEGIN ===')
+
+        print(f'W.shape: {W.shape}')
+
         self.params = [W]
         self.grads = [np.zeros_like(W)]
         self.idx = None
 
+        print(f'self.params[0].shape: {self.params[0].shape}')
+        print(f'self.grads[0].shape: {self.grads[0].shape}')
+
+        print('=== Embedding.__init__ END ===')
+
     def forward(self, idx):
+        print('=== Embedding.forward BEGIN ===')
+
+        print(f'idx: {idx}')
+
         W, = self.params
         self.idx = idx
         out = W[idx]
+
+        print(f'out.shape: {out.shape}')
+
+        print('=== Embedding.forward END ===')
         return out
 
     def backward(self, dout):
+        print('=== Embedding.backward BEGIN ===')
+
+        print(f'dout: {dout.shape}')
+
         dW, = self.grads
         dW[...] = 0
+
+        print(f'dW.shape: {dW.shape}')
+        print(f'dW: {dW}')
+
         if GPU:
             np.scatter_add(dW, self.idx, dout)
         else:
             np.add.at(dW, self.idx, dout)
+
+        print(f'dW.shape: {dW.shape}')
+        print(f'dW: {dW}')
+
+        print('=== Embedding.backward END ===')
+
         return None

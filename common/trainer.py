@@ -92,6 +92,14 @@ class RnnlmTrainer:
 
     def fit(self, xs, ts, max_epoch=10, batch_size=20, time_size=35,
             max_grad=None, eval_interval=20):
+
+        print('=== RnnlmTrainer.fit BEGIN ===')
+        print(f'xs.shape: {xs.shape}')
+        print(f'ts.shape: {ts.shape}')
+        print(f'max_epoche: {max_epoch}')
+        print(f'batch_size: {batch_size}')
+        print(f'time_size: {time_size}')
+
         data_size = len(xs)
         max_iters = data_size // (batch_size * time_size)
         self.time_idx = 0
@@ -106,13 +114,35 @@ class RnnlmTrainer:
             for iters in range(max_iters):
                 batch_x, batch_t = self.get_batch(xs, ts, batch_size, time_size)
 
+                print(f'xs.shape: {xs.shape}')
+                #print(f'xs: {xs}')
+                print(f'ts.shape: {ts.shape}')
+                #print(f'ts: {ts}')
+
+                print(f'batch_x.shape: {batch_x.shape}')
+                #print(f'batch_x[0]: {batch_x[0]}')
+                #print(f'batch_x[1]: {batch_x[1]}')
+                #print(f'batch_x[2]: {batch_x[2]}')
+                #print(f'batch_x[3]: {batch_x[3]}')
+                #print(f'batch_x[4]: {batch_x[4]}')
+
+                print(f'batch_t.shape: {batch_t.shape}')
+                #print(f'batch_t[0]: {batch_t[0]}')
+                #print(f'batch_t[1]: {batch_t[1]}')
+                #print(f'batch_t[2]: {batch_t[2]}')
+                #print(f'batch_t[3]: {batch_t[3]}')
+                #print(f'batch_t[4]: {batch_t[4]}')
+
                 # 勾配を求め、パラメータを更新
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
+
                 params, grads = remove_duplicate(model.params, model.grads)  # 共有された重みを1つに集約
                 if max_grad is not None:
                     clip_grads(grads, max_grad)
+
                 optimizer.update(params, grads)
+
                 total_loss += loss
                 loss_count += 1
 
@@ -126,6 +156,8 @@ class RnnlmTrainer:
                     total_loss, loss_count = 0, 0
 
             self.current_epoch += 1
+
+        print('=== RnnlmTrainer.fit END ===')
 
     def plot(self, ylim=None):
         x = numpy.arange(len(self.ppl_list))
