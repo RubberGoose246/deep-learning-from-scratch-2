@@ -17,7 +17,19 @@ class BetterRnnlm(BaseModel):
     '''
     def __init__(self, vocab_size=10000, wordvec_size=650,
                  hidden_size=650, dropout_ratio=0.5):
+        print('=== BetterRnnlm.__init__ BEGIN ===')
+
+        print(f'vocab_size: {vocab_size}')
+        print(f'wordvec_size: {wordvec_size}')
+        print(f'hidden_size: {hidden_size}')
+        print(f'dropout_ratio: {dropout_ratio}')
+
         V, D, H = vocab_size, wordvec_size, hidden_size
+
+        print(f'V: {V}')
+        print(f'D: {D}')
+        print(f'H: {H}')
+
         rn = np.random.randn
 
         embed_W = (rn(V, D) / 100).astype('f')
@@ -29,6 +41,21 @@ class BetterRnnlm(BaseModel):
         lstm_b2 = np.zeros(4 * H).astype('f')
         affine_b = np.zeros(V).astype('f')
 
+        # hidden_size と wordvec_size を変えると形状が合わなくなり重み共有できないので、新しい重みを作成
+        affine_W = (rn(H, V) / np.sqrt(H)).astype('f')
+
+        print(f'embed_W.shape: {embed_W.shape}')
+        print(f'lstm_Wx1.shape: {lstm_Wx1.shape}')
+        print(f'lstm_Wh1.shape: {lstm_Wh1.shape}')
+        print(f'lstm_b1.shape: {lstm_b1.shape}')
+        print(f'lstm_Wx2.shape: {lstm_Wx2.shape}')
+        print(f'lstm_Wh2.shape: {lstm_Wh2.shape}')
+        print(f'lstm_b2.shape: {lstm_b2.shape}')
+        print(f'lstm_Wh2.shape: {lstm_Wh2.shape}')
+        print(f'lstm_b2.shape: {lstm_b2.shape}')
+        print(f'affine_W.shape: {affine_W.shape}')
+        print(f'affine_b.shape: {affine_b.shape}')
+
         self.layers = [
             TimeEmbedding(embed_W),
             TimeDropout(dropout_ratio),
@@ -36,7 +63,8 @@ class BetterRnnlm(BaseModel):
             TimeDropout(dropout_ratio),
             TimeLSTM(lstm_Wx2, lstm_Wh2, lstm_b2, stateful=True),
             TimeDropout(dropout_ratio),
-            TimeAffine(embed_W.T, affine_b)  # weight tying!!
+            # TimeAffine(embed_W.T, affine_b)  # weight tying!!
+            TimeAffine(affine_W, affine_b)  # 重み共有ではなく、新しく作成した重みを使用
         ]
         self.loss_layer = TimeSoftmaxWithLoss()
         self.lstm_layers = [self.layers[2], self.layers[4]]
@@ -47,23 +75,62 @@ class BetterRnnlm(BaseModel):
             self.params += layer.params
             self.grads += layer.grads
 
+        print(f'len(self.params): {len(self.params)}')
+        for i, _ in enumerate(self.params):
+          print(f'self.params[{i}].shape: {self.params[i].shape}')
+
+        print(f'len(self.grads): {len(self.grads)}')
+        for i, _ in enumerate(self.grads):
+          print(f'self.grads[{i}].shape: {self.grads[i].shape}')
+
+        print('=== BetterRnnlm.__init__ END ===')
+
+
     def predict(self, xs, train_flg=False):
+        print('=== BetterRnnlm.predict BEGIN ===')
+
+        print(f'xs.shape: {xs.shape}')
+        print(f'train_flg: {train_flg}')
+
         for layer in self.drop_layers:
             layer.train_flg = train_flg
 
-        for layer in self.layers:
-            xs = layer.forward(xs)
+        for i in range(len(self.layers)):
+            xs = self.layers[i].forward(xs)
+
+        print(f'xs.shape: {xs.shape}')
+
+        print('=== BetterRnnlm.predict END ===')
+
         return xs
 
     def forward(self, xs, ts, train_flg=True):
+        print('=== BetterRnnlm.forward BEGIN ===')
+
+        print(f'xs.shape: {xs.shape}')
+        print(f'ts.shape: {ts.shape}')
+        print(f'train_flg: {train_flg}')
+
         score = self.predict(xs, train_flg)
         loss = self.loss_layer.forward(score, ts)
+
+        print('=== BetterRnnlm.forward END ===')
+
         return loss
 
     def backward(self, dout=1):
+        print('=== BetterRnnlm.backward BEGIN ===')
+
         dout = self.loss_layer.backward(dout)
-        for layer in reversed(self.layers):
-            dout = layer.backward(dout)
+
+        # for layer in reversed(self.layers):
+        #     dout = layer.backward(dout)
+
+        for i in range(len(self.layers)):
+            dout = self.layers[len(self.layers) - 1 - i].backward(dout)
+
+        print('=== BetterRnnlm.backward END ===')
+
         return dout
 
     def reset_state(self):

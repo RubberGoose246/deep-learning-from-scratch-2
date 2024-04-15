@@ -68,12 +68,24 @@ class Trainer:
 
 class RnnlmTrainer:
     def __init__(self, model, optimizer):
+        print('=== RnnlmTrainer.__init__ BEGIN ===')
+
         self.model = model
         self.optimizer = optimizer
         self.time_idx = None
         self.ppl_list = None
         self.eval_interval = None
         self.current_epoch = 0
+
+        print(f'self.model: {self.model}')
+        print(f'self.optimizer: {self.optimizer}')
+        print(f'self.time_idx: {self.time_idx}')
+        print(f'self.ppl_list: {self.ppl_list}')
+        print(f'self.eval_interval: {self.eval_interval}')
+        print(f'self.current_epoch: {self.current_epoch}')
+
+        print('=== RnnlmTrainer.__init__ END ===')
+
 
     def get_batch(self, x, t, batch_size, time_size):
         batch_x = np.empty((batch_size, time_size), dtype='i')
@@ -92,6 +104,17 @@ class RnnlmTrainer:
 
     def fit(self, xs, ts, max_epoch=10, batch_size=20, time_size=35,
             max_grad=None, eval_interval=20):
+
+        print('=== RnnlmTrainer.fit BEGIN ===')
+
+        print(f'xs.shape: {xs.shape}')
+        print(f'ts.shape: {ts.shape}')
+        print(f'max_epoch: {max_epoch}')
+        print(f'batch_size: {batch_size}')
+        print(f'time_size: {time_size}')
+        print(f'max_grad: {max_grad}')
+        print(f'eval_interval: {eval_interval}')
+
         data_size = len(xs)
         max_iters = data_size // (batch_size * time_size)
         self.time_idx = 0
@@ -106,6 +129,9 @@ class RnnlmTrainer:
             for iters in range(max_iters):
                 batch_x, batch_t = self.get_batch(xs, ts, batch_size, time_size)
 
+                print(f'batch_x.shape: {batch_x.shape}')
+                print(f'batch_t.shape: {batch_t.shape}')
+
                 # 勾配を求め、パラメータを更新
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
@@ -113,6 +139,7 @@ class RnnlmTrainer:
                 if max_grad is not None:
                     clip_grads(grads, max_grad)
                 optimizer.update(params, grads)
+
                 total_loss += loss
                 loss_count += 1
 
@@ -126,6 +153,8 @@ class RnnlmTrainer:
                     total_loss, loss_count = 0, 0
 
             self.current_epoch += 1
+
+        print('=== RnnlmTrainer.fit END ===')
 
     def plot(self, ylim=None):
         x = numpy.arange(len(self.ppl_list))

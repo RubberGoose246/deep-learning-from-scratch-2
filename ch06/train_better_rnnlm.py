@@ -14,9 +14,15 @@ from better_rnnlm import BetterRnnlm
 
 
 # ハイパーパラメータの設定
+
 batch_size = 20
-wordvec_size = 650
-hidden_size = 650
+
+#wordvec_size = 650
+wordvec_size = 200
+
+#hidden_size = 650
+hidden_size = 100
+
 time_size = 35
 lr = 20.0
 max_epoch = 40
@@ -43,6 +49,8 @@ trainer = RnnlmTrainer(model, optimizer)
 
 best_ppl = float('inf')
 for epoch in range(max_epoch):
+    print(f'==================== {epoch} ====================')
+
     trainer.fit(xs, ts, max_epoch=1, batch_size=batch_size,
                 time_size=time_size, max_grad=max_grad)
 
