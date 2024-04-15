@@ -10,19 +10,28 @@ from common.util import clip_grads
 
 class Trainer:
     def __init__(self, model, optimizer):
+        print('=== Trainer.__init__ BEGIN ===')
+
         self.model = model
         self.optimizer = optimizer
         self.loss_list = []
         self.eval_interval = None
         self.current_epoch = 0
 
+        print('=== Trainer.__init__ END ===')
+
     def fit(self, x, t, max_epoch=10, batch_size=32, max_grad=None, eval_interval=20):
+        print('=== Trainer.fit BEGIN ===')
+
         data_size = len(x)
         max_iters = data_size // batch_size
         self.eval_interval = eval_interval
         model, optimizer = self.model, self.optimizer
         total_loss = 0
         loss_count = 0
+
+        print(f'max_epoch: {max_epoch}', file=sys.stderr)
+        print(f'max_iters: {max_iters}', file=sys.stderr)
 
         start_time = time.time()
         for epoch in range(max_epoch):
@@ -50,13 +59,17 @@ class Trainer:
                     avg_loss = total_loss / loss_count
                     elapsed_time = time.time() - start_time
                     print('| epoch %d |  iter %d / %d | time %d[s] | loss %.2f'
-                          % (self.current_epoch + 1, iters + 1, max_iters, elapsed_time, avg_loss))
+                          % (self.current_epoch + 1, iters + 1, max_iters, elapsed_time, avg_loss), file=sys.stderr)
                     self.loss_list.append(float(avg_loss))
                     total_loss, loss_count = 0, 0
 
             self.current_epoch += 1
 
+        print('=== Trainer.fit END ===')
+
     def plot(self, ylim=None):
+        print('=== Trainer.plot BEGIN ===')
+
         x = numpy.arange(len(self.loss_list))
         if ylim is not None:
             plt.ylim(*ylim)
@@ -65,6 +78,7 @@ class Trainer:
         plt.ylabel('loss')
         plt.show()
 
+        print('=== Trainer.plot END ===')
 
 class RnnlmTrainer:
     def __init__(self, model, optimizer):

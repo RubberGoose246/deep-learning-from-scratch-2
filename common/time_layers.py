@@ -167,6 +167,8 @@ class LSTM:
 
 class TimeLSTM:
     def __init__(self, Wx, Wh, b, stateful=False):
+        print('=== TimeLSTM.__init__ BEGIN ===')
+
         self.params = [Wx, Wh, b]
         self.grads = [np.zeros_like(Wx), np.zeros_like(Wh), np.zeros_like(b)]
         self.layers = None
@@ -175,7 +177,11 @@ class TimeLSTM:
         self.dh = None
         self.stateful = stateful
 
+        print('=== TimeLSTM.__init__ END ===')
+
     def forward(self, xs):
+        print('=== TimeLSTM.forward BEGIN ===')
+
         Wx, Wh, b = self.params
         N, T, D = xs.shape
         H = Wh.shape[0]
@@ -195,9 +201,13 @@ class TimeLSTM:
 
             self.layers.append(layer)
 
+        print('=== TimeLSTM.forward END ===')
+
         return hs
 
     def backward(self, dhs):
+        print('=== TimeLSTM.backward BEGIN ===')
+
         Wx, Wh, b = self.params
         N, T, H = dhs.shape
         D = Wx.shape[0]
@@ -216,23 +226,40 @@ class TimeLSTM:
         for i, grad in enumerate(grads):
             self.grads[i][...] = grad
         self.dh = dh
+
+        print('=== TimeLSTM.backward END ===')
+
         return dxs
 
     def set_state(self, h, c=None):
+        print('=== TimeLSTM.set_state BEGIN ===')
+
         self.h, self.c = h, c
 
+        print('=== TimeLSTM.set_state END ===')
+
     def reset_state(self):
+        print('=== TimeLSTM.reset_state BEGIN ===')
+
         self.h, self.c = None, None
+
+        print('=== TimeLSTM.reset_state END ===')
 
 
 class TimeEmbedding:
     def __init__(self, W):
+        print('=== TimeEmbedding.__init__ BEGIN ===')
+
         self.params = [W]
         self.grads = [np.zeros_like(W)]
         self.layers = None
         self.W = W
 
+        print('=== TimeEmbedding.__init__ END ===')
+
     def forward(self, xs):
+        print('=== TimeEmbedding.forward BEGIN ===')
+
         N, T = xs.shape
         V, D = self.W.shape
 
@@ -244,9 +271,13 @@ class TimeEmbedding:
             out[:, t, :] = layer.forward(xs[:, t])
             self.layers.append(layer)
 
+        print('=== TimeEmbedding.forward END ===')
+
         return out
 
     def backward(self, dout):
+        print('=== TimeEmbedding.backward BEGIN ===')
+
         N, T, D = dout.shape
 
         grad = 0
@@ -256,25 +287,39 @@ class TimeEmbedding:
             grad += layer.grads[0]
 
         self.grads[0][...] = grad
+
+        print('=== TimeEmbedding.backward END ===')
+
         return None
 
 
 class TimeAffine:
     def __init__(self, W, b):
+        print('=== TimeAffine.__init__ BEGIN ===')
+
         self.params = [W, b]
         self.grads = [np.zeros_like(W), np.zeros_like(b)]
         self.x = None
 
+        print('=== TimeAffine.__init__ END ===')
+
     def forward(self, x):
+        print('=== TimeAffine.forward BEGIN ===')
+
         N, T, D = x.shape
         W, b = self.params
 
         rx = x.reshape(N*T, -1)
         out = np.dot(rx, W) + b
         self.x = x
+
+        print('=== TimeAffine.forward END ===')
+
         return out.reshape(N, T, -1)
 
     def backward(self, dout):
+        print('=== TimeAffine.backward BEGIN ===')
+
         x = self.x
         N, T, D = x.shape
         W, b = self.params
@@ -289,6 +334,8 @@ class TimeAffine:
 
         self.grads[0][...] = dW
         self.grads[1][...] = db
+
+        print('=== TimeAffine.backward END ===')
 
         return dx
 

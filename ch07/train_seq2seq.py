@@ -24,19 +24,23 @@ if is_reverse:
 # ハイパーパラメータの設定
 vocab_size = len(char_to_id)
 wordvec_size = 16
-hidden_size = 128
+#hidden_size = 128
+hidden_size = 256
 batch_size = 128
 max_epoch = 25
 max_grad = 5.0
 
 # Normal or Peeky? ==============================================
-model = Seq2seq(vocab_size, wordvec_size, hidden_size)
-# model = PeekySeq2seq(vocab_size, wordvec_size, hidden_size)
+# model = Seq2seq(vocab_size, wordvec_size, hidden_size)
+model = PeekySeq2seq(vocab_size, wordvec_size, hidden_size)
 # ================================================================
 optimizer = Adam()
 trainer = Trainer(model, optimizer)
 
 acc_list = []
+
+print(f'max_epoch: {max_epoch}', file=sys.stderr)
+
 for epoch in range(max_epoch):
     trainer.fit(x_train, t_train, max_epoch=1,
                 batch_size=batch_size, max_grad=max_grad)
