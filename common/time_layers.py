@@ -167,139 +167,392 @@ class LSTM:
 
 class TimeLSTM:
     def __init__(self, Wx, Wh, b, stateful=False):
+        print('=== TimeLSTM.__init__ BEGIN ===')
+
+        print(f'P: Wx.shape: {Wx.shape}')
+        print(f'P: Wh.shape: {Wh.shape}')
+        print(f'P: b.shape: {b.shape}')
+        print(f'P: stateful: {stateful}')
+
         self.params = [Wx, Wh, b]
         self.grads = [np.zeros_like(Wx), np.zeros_like(Wh), np.zeros_like(b)]
         self.layers = None
+
+        print(f'len(self.params): {len(self.params)}')
+        for i in range(len(self.params)):
+            print(f'self.params[{i}].shape: {self.params[i].shape}')
+
+        print(f'len(self.grads): {len(self.grads)}')
+        for i in range(len(self.grads)):
+            print(f'self.grads[{i}].shape: {self.grads[i].shape}')
 
         self.h, self.c = None, None
         self.dh = None
         self.stateful = stateful
 
+        print(f'self.h: {self.h}')
+        print(f'self.c: {self.c}')
+        print(f'self.dh: {self.dh}')
+        print(f'self.stateful: {self.stateful}')
+
+        print('=== TimeLSTM.__init__ END ===')
+
     def forward(self, xs):
+        print('=== TimeLSTM.forward BEGIN ===')
+
+        print(f'P: xs.shape: {xs.shape}')
+
         Wx, Wh, b = self.params
+
+        print(f'Wx.shape: {Wx.shape}')
+        print(f'Wh.shape: {Wh.shape}')
+        print(f'b.shape: {b.shape}')
+
         N, T, D = xs.shape
         H = Wh.shape[0]
+
+        print(f'N: {N}')
+        print(f'T: {T}')
+        print(f'D: {D}')
+        print(f'H: {H}')
 
         self.layers = []
         hs = np.empty((N, T, H), dtype='f')
 
+        print(f'hs.shape: {hs.shape}')
+
         if not self.stateful or self.h is None:
             self.h = np.zeros((N, H), dtype='f')
+
+        print(f'self.h.shape: {self.h.shape}')
+
         if not self.stateful or self.c is None:
             self.c = np.zeros((N, H), dtype='f')
 
-        for t in range(T):
+        print(f'self.c.shape: {self.c.shape}')
+
+        # for t in range(T):
+        for t in range(1):
+            print(f't: {t}')
+
             layer = LSTM(*self.params)
+
+            print(f'xs[:, {t}, :].shape: {xs[:, t, :].shape}')
+            print(f'self.h.shape: {self.h.shape}')
+            print(f'self.c.shape: {self.c.shape}')
+
             self.h, self.c = layer.forward(xs[:, t, :], self.h, self.c)
+
+            print(f'self.h.shape: {self.h.shape}')
+            print(f'self.c.shape: {self.c.shape}')
+
             hs[:, t, :] = self.h
 
+            print(f'hs[:, {t}, :].shape: {hs[:, t, :].shape}')
+
             self.layers.append(layer)
+
+        print(f'R: hs.shape: {hs.shape}')
+
+        print('=== TimeLSTM.forward END ===')
 
         return hs
 
     def backward(self, dhs):
+        print('=== TimeLSTM.backward BEGIN ===')
+
+        print(f'P: dhs.shape: {dhs.shape}')
+
         Wx, Wh, b = self.params
         N, T, H = dhs.shape
         D = Wx.shape[0]
 
+        print(f'Wx.shape: {Wx.shape}')
+        print(f'Wh.shape: {Wh.shape}')
+        print(f'b.shape: {b.shape}')
+
+        print(f'N: {N}')
+        print(f'T: {T}')
+        print(f'H: {H}')
+        print(f'D: {D}')
+
         dxs = np.empty((N, T, D), dtype='f')
+
+        print(f'dxs.shape: {dxs.shape}')
+
         dh, dc = 0, 0
 
+        print(f'dh: {dh}')
+        print(f'dc: {dc}')
+
         grads = [0, 0, 0]
-        for t in reversed(range(T)):
+
+        # for t in reversed(range(T)):
+        for t in reversed(range(1)):
+            print(f't: {t}')
+
             layer = self.layers[t]
+
+            print(f'(dhs[:, {t}, :] + dh).shape: {(dhs[:, t, :] + dh).shape}')
+            print(f'dc: {dc}')
+
             dx, dh, dc = layer.backward(dhs[:, t, :] + dh, dc)
+
+            print(f'dx.shape: {dx.shape}')
+            print(f'dh.shape: {dh.shape}')
+            print(f'dc.shape: {dc.shape}')
+
             dxs[:, t, :] = dx
+
+            print(f'dxs[:, {t}, :].shape: {dxs[:, t, :].shape}')
+
             for i, grad in enumerate(layer.grads):
                 grads[i] += grad
 
         for i, grad in enumerate(grads):
             self.grads[i][...] = grad
         self.dh = dh
+
+        print(f'len(self.grads): {len(self.grads)}')
+        for i in range(len(self.grads)):
+            print(f'self.grads[{i}].shape: {self.grads[i].shape}')
+
+        print(f'self.dh.shape: {self.dh.shape}')
+
+        print(f'R: dxs.shape: {dxs.shape}')
+
+        print('=== TimeLSTM.backward END ===')
+
         return dxs
 
     def set_state(self, h, c=None):
+        print('=== TimeLSTM.set_state BEGIN ===')
+
+        print(f'P: h.shape: {h.shape}')
+        print(f'P: c: {c}')
+
         self.h, self.c = h, c
 
+        print(f'self.h.shape: {self.h.shape}')
+        print(f'self.c: {self.c}')
+
+        print('=== TimeLSTM.set_state END ===')
+
     def reset_state(self):
+        print('=== TimeLSTM.reset_state BEGIN ===')
+
         self.h, self.c = None, None
 
+        print(f'self.h: {self.h}')
+        print(f'self.c: {self.c}')
+
+        print('=== TimeLSTM.reset_state END ===')
 
 class TimeEmbedding:
     def __init__(self, W):
+        print('=== TimeEmbedding.__init__ BEGIN ===')
+
+        print(f'P: W.shape: {W.shape}')
+
         self.params = [W]
         self.grads = [np.zeros_like(W)]
         self.layers = None
         self.W = W
 
+        print(f'len(self.params): {len(self.params)}')
+        for i in range(len(self.params)):
+            print(f'self.params[{i}].shape: {self.params[i].shape}')
+
+        print(f'len(self.grads): {len(self.grads)}')
+        for i in range(len(self.grads)):
+            print(f'self.grads[{i}].shape: {self.grads[i].shape}')
+
+        print(f'self.W.shape: {self.W.shape}')
+
+        print('=== TimeEmbedding.__init__ END ===')
+
     def forward(self, xs):
+        print('=== TimeEmbedding.forward BEGIN ===')
+
+        print(f'P: xs.shape: {xs.shape}')
+
         N, T = xs.shape
         V, D = self.W.shape
 
+        print(f'N: {N}')
+        print(f'T: {T}')
+        print(f'V: {V}')
+        print(f'D: {D}')
+
         out = np.empty((N, T, D), dtype='f')
+
+        print(f'out.shape: {out.shape}')
+
         self.layers = []
 
-        for t in range(T):
+        #for t in range(T):
+        for t in range(1):
             layer = Embedding(self.W)
+
+            print(f'xs[:, {t}].shape: {xs[:, t].shape}')
+
             out[:, t, :] = layer.forward(xs[:, t])
+
+            print(f'out[:, {t}, :].shape: {out[:, t, :].shape}')
+
             self.layers.append(layer)
+
+        print(f'R: out.shape: {out.shape}')
+
+        print('=== TimeEmbedding.forward END ===')
 
         return out
 
     def backward(self, dout):
+        print('=== TimeEmbedding.backward BEGIN ===')
+
+        print(f'P: dout.shape: {dout.shape}')
+
         N, T, D = dout.shape
 
+        print(f'N: {N}')
+        print(f'T: {T}')
+        print(f'D: {D}')
+
         grad = 0
-        for t in range(T):
+        #for t in range(T):
+        for t in range(1):
             layer = self.layers[t]
             layer.backward(dout[:, t, :])
             grad += layer.grads[0]
 
         self.grads[0][...] = grad
+
+        print(f'self.grads[0].shape: {self.grads[0].shape}')
+
+        print(f'R: None: {None}')
+
+        print('=== TimeEmbedding.backward END ===')
+
         return None
 
 
 class TimeAffine:
     def __init__(self, W, b):
+        print('=== TimeAffine.__init__ BEGIN ===')
+
+        print(f'P: W.shape: {W.shape}')
+        print(f'P: b.shape: {b.shape}')
+
         self.params = [W, b]
         self.grads = [np.zeros_like(W), np.zeros_like(b)]
         self.x = None
 
+        print(f'len(self.params): {len(self.params)}')
+        for i in range(len(self.params)):
+            print(f'self.params[{i}].shape: {self.params[i].shape}')
+
+        print(f'len(self.grads): {len(self.grads)}')
+        for i in range(len(self.grads)):
+            print(f'self.grads[{i}].shape: {self.grads[i].shape}')
+
+        print(f'self.x: {self.x}')
+
+        print('=== TimeAffine.__init__ END ===')
+
     def forward(self, x):
+        print('=== TimeAffine.forward BEGIN ===')
+
+        print(f'P: x.shape: {x.shape}')
+
         N, T, D = x.shape
         W, b = self.params
+
+        print(f'N: {N}')
+        print(f'T: {T}')
+        print(f'D: {D}')
+        print(f'W.shape: {W.shape}')
+        print(f'b.shape: {b.shape}')
 
         rx = x.reshape(N*T, -1)
         out = np.dot(rx, W) + b
         self.x = x
+
+        print(f'rx.shape: {rx.shape}')
+        print(f'out.shape: {out.shape}')
+        print(f'self.x.shape: {self.x.shape}')
+
+        print(f'R: out.reshape(N, T, -1).shape: {out.reshape(N, T, -1).shape}')
+
+        print('=== TimeAffine.forward END ===')
+
         return out.reshape(N, T, -1)
 
     def backward(self, dout):
+        print('=== TimeAffine.backward BEGIN ===')
+
+        print(f'P: dout.shape: {dout.shape}')
+
         x = self.x
         N, T, D = x.shape
         W, b = self.params
 
+        print(f'N: {N}')
+        print(f'T: {T}')
+        print(f'D: {D}')
+        print(f'W.shape: {W.shape}')
+        print(f'b.shape: {b.shape}')
+
         dout = dout.reshape(N*T, -1)
         rx = x.reshape(N*T, -1)
 
+        print(f'dout.shape: {dout.shape}')
+        print(f'rx.shape: {rx.shape}')
+
         db = np.sum(dout, axis=0)
         dW = np.dot(rx.T, dout)
+
+        print(f'db.shape: {db.shape}')
+        print(f'dW.shape: {dW.shape}')
+
         dx = np.dot(dout, W.T)
+
+        print(f'dx.shape: {dx.shape}')
+
         dx = dx.reshape(*x.shape)
+
+        print(f'dx.shape: {dx.shape}')
 
         self.grads[0][...] = dW
         self.grads[1][...] = db
+
+        print(f'len(self.grads): {len(self.grads)}')
+        for i in range(len(self.grads)):
+            print(f'self.grads[{i}].shape: {self.grads[i].shape}')
+
+        print(f'R: dx.shape: {dx.shape}')
+
+        print('=== TimeAffine.backward END ===')
 
         return dx
 
 
 class TimeSoftmaxWithLoss:
     def __init__(self):
+        print('=== TimeSoftmaxWithLoss.__init__ BEGIN ===')
+
         self.params, self.grads = [], []
         self.cache = None
         self.ignore_label = -1
 
+        print('=== TimeSoftmaxWithLoss.__init__ END ===')
+
     def forward(self, xs, ts):
+        print('=== TimeSoftmaxWithLoss.forward BEGIN ===')
+
+        print(f'P: xs.shape: {xs.shape}')
+        print(f'P: ts.shape: {ts.shape}')
+
         N, T, V = xs.shape
 
         if ts.ndim == 3:  # 教師ラベルがone-hotベクトルの場合
@@ -319,9 +572,16 @@ class TimeSoftmaxWithLoss:
         loss /= mask.sum()
 
         self.cache = (ts, ys, mask, (N, T, V))
+
+        print(f'R: loss: {loss}')
+
+        print('=== TimeSoftmaxWithLoss.forward END ===')
+
         return loss
 
     def backward(self, dout=1):
+        print('=== TimeSoftmaxWithLoss.backward BEGIN ===')
+
         ts, ys, mask, (N, T, V) = self.cache
 
         dx = ys
@@ -331,6 +591,8 @@ class TimeSoftmaxWithLoss:
         dx *= mask[:, np.newaxis]  # ignore_labelに該当するデータは勾配を0にする
 
         dx = dx.reshape((N, T, V))
+
+        print('=== TimeSoftmaxWithLoss.backward END ===')
 
         return dx
 

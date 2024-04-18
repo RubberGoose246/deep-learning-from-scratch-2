@@ -8,13 +8,22 @@ from common.optimizer import Adam
 from common.trainer import Trainer
 from common.util import eval_seq2seq
 from attention_seq2seq import AttentionSeq2seq
-from ch07.seq2seq import Seq2seq
-from ch07.peeky_seq2seq import PeekySeq2seq
+#from ch07.seq2seq import Seq2seq
+#from ch07.peeky_seq2seq import PeekySeq2seq
 
 
 # データの読み込み
 (x_train, t_train), (x_test, t_test) = sequence.load_data('date.txt')
+
+print(f'x_train.shape: {x_train.shape}')
+print(f't_train.shape: {t_train.shape}')
+print(f'x_test.shape: {x_test.shape}')
+print(f't_test.shape: {t_test.shape}')
+
 char_to_id, id_to_char = sequence.get_vocab()
+
+print(f'len(char_to_id): {len(char_to_id)}')
+print(f'len(id_to_char): {len(id_to_char)}')
 
 # 入力文を反転
 x_train, x_test = x_train[:, ::-1], x_test[:, ::-1]

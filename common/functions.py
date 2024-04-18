@@ -1,10 +1,30 @@
 # coding: utf-8
 from common.np import *
-
+import warnings
 
 def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+    # print('=== sigmoid BEGIN ===')
 
+    # print(f'P: x.shape: {x.shape}')
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+
+            result = 1 / (1 + np.exp(-x))
+
+    except RuntimeWarning:
+        print(f'np.max(x): {np.max(x)}')
+
+        x_clipped = np.clip(x, -20, 20)
+
+        # print(f'np.max(x_clipped): {np.max(x_clipped)}')
+
+        result = 1 / (1 + np.exp(-x_clipped))
+
+    # print('=== sigmoid END ===')
+
+    return result
 
 def relu(x):
     return np.maximum(0, x)

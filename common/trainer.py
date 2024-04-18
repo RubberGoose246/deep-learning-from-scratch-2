@@ -17,27 +17,67 @@ class Trainer:
         self.current_epoch = 0
 
     def fit(self, x, t, max_epoch=10, batch_size=32, max_grad=None, eval_interval=20):
+        print('=== Trainer.fit BEGIN ===')
+
+        print(f'P: x.shape: {x.shape}')
+        print(f'P: t.shape: {t.shape}')
+        print(f'P: max_epoch: {max_epoch}')
+        print(f'P: batch_size: {batch_size}')
+        print(f'P: max_grad: {max_grad}')
+        print(f'P: eval_interval: {eval_interval}')
+
         data_size = len(x)
+
+        print(f'data_size: {data_size}')
+
         max_iters = data_size // batch_size
+
+        print(f'max_iters: {max_iters}')
+
         self.eval_interval = eval_interval
+
+        print(f'self.eval_interval: {self.eval_interval}')
+
         model, optimizer = self.model, self.optimizer
+
         total_loss = 0
+
+        print(f'total_loss: {total_loss}')
+
         loss_count = 0
+
+        print(f'loss_count: {loss_count}')
 
         start_time = time.time()
         for epoch in range(max_epoch):
+            print(f'epoch: {epoch}')
+
             # シャッフル
             idx = numpy.random.permutation(numpy.arange(data_size))
+
+            print(f'idx.shape: {idx.shape}')
+
             x = x[idx]
             t = t[idx]
 
+            print(f'x.shape: {x.shape}')
+            print(f't.shape: {t.shape}')
+
             for iters in range(max_iters):
+                print(f'epoch: {epoch}')
+
                 batch_x = x[iters*batch_size:(iters+1)*batch_size]
                 batch_t = t[iters*batch_size:(iters+1)*batch_size]
+
+                print(f'batch_x.shape: {batch_x.shape}')
+                print(f'batch_t.shape: {batch_t.shape}')
 
                 # 勾配を求め、パラメータを更新
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
+
+                sys.exit()
+
                 params, grads = remove_duplicate(model.params, model.grads)  # 共有された重みを1つに集約
                 if max_grad is not None:
                     clip_grads(grads, max_grad)
@@ -55,6 +95,8 @@ class Trainer:
                     total_loss, loss_count = 0, 0
 
             self.current_epoch += 1
+
+        print('=== Trainer.fit END ===')
 
     def plot(self, ylim=None):
         x = numpy.arange(len(self.loss_list))
